@@ -195,16 +195,18 @@ def find_license_files(d):
         spdx_generic = None
         license_source = None
         # If the generic does not exist we need to check to see if there is an SPDX mapping to it
+        license_type_mapped = d.getVarFlag('SPDXLICENSEMAP', license_type)
         for lic_dir in license_source_dirs:
-            if not os.path.isfile(os.path.join(lic_dir, license_type)):
-                if d.getVarFlag('SPDXLICENSEMAP', license_type) != None:
-                    # Great, there is an SPDXLICENSEMAP. We can copy!
-                    bb.debug(1, "We need to use a SPDXLICENSEMAP for %s" % (license_type))
-                    spdx_generic = d.getVarFlag('SPDXLICENSEMAP', license_type)
-                    license_source = lic_dir
-                    break
-            elif os.path.isfile(os.path.join(lic_dir, license_type)):
+            # Prefer first license_type or license_type_mapped found with preference
+            # to the former in the current directory.
+            if os.path.isfile(os.path.join(lic_dir, license_type)):
                 spdx_generic = license_type
+                license_source = lic_dir
+                break
+            if license_type_mapped and os.path.isfile(os.path.join(lic_dir, license_type_mapped)):
+                # Great, there is an SPDXLICENSEMAP. We can copy!
+                bb.debug(1, "We need to use a SPDXLICENSEMAP for %s" % (license_type))
+                spdx_generic = license_type_mapped
                 license_source = lic_dir
                 break
 
